@@ -66,11 +66,24 @@ window.GameChain = (function () {
   function idHash(name) { return eth().keccak256(eth().toUtf8Bytes(name)); }
 
   // ---- Generic READ (ethers Contract ile, gercek ABI decode) ----
-  // Ornek: await Chain.read("entryFee") -> bigint
-  //        await Chain.read("getUintConfig", idHash("MaxLives")) -> bigint
+  // Rate-limit / gecici RPC hatalarina karsi kucuk retry.
   async function read(name, ...args) {
     if (!readContract) throw new Error("Chain okuma modu hazir degil (once cuzdan bagla).");
-    return readContract[name](...args);
+    let lastErr;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await readContract[name](...args);
+      } catch (e) {
+        lastErr = e;
+        const msg = (e && e.message) ? e.message : "";
+        // Gercek revert (contract hatasi) ise retry gereksiz — hemen firlat.
+        if (/revert|execution reverted|missing revert data/i.test(msg) && attempt === 0) {
+          // Ilk denemede revert geldiyse, RPC veriyi getiremedi demektir; retry dene.
+        }
+        await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+      }
+    }
+    throw lastErr;
   }
 
   // ---- Generic WRITE (ethers Contract, cuzdan onayi + receipt bekler) ----

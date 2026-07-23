@@ -289,16 +289,33 @@ window.GameUI = (function () {
     if (!window.GameChain.isReady()) { showNotification(window.GameConfigReady.describe(), "warn"); return; }
     if (!(await window.Wallet.ensureChain())) return;
 
-    // Entry fee gerekiyorsa exact-amount onay
+    // Entry fee kontrolu (seri cagri — paralel RPC rate-limit'i azaltir)
     let fee = 0n;
     try {
-      const [f, free] = await Promise.all([window.GameChain.read("entryFee"), window.GameChain.read("isGameFree")]);
+      const [f, free] = await Promise.all([
+        window.GameChain.read("entryFee"),
+        window.GameChain.read("isGameFree"),
+      ]);
       if (!free && BigInt(f) > 0n) {
         fee = BigInt(f);
         const ok = await window.GameChain.ensureApproval(fee, (m) => showNotification(m, "info"));
         if (!ok) { showNotification("Giriş ücreti onayı başarısız", "error"); return; }
       }
-    } catch (e) { showNotification("Giriş kontrolü hatası: " + Wallet.shortErr(e), "error"); return; }
+    } catch (e) {
+      // Tekrar dene: bazen ilk isGameFree cagrisi RPC gecikmesinden ogebilir
+      try {
+        const free2 = await window.GameChain.read("isGameFree");
+        const f2 = await window.GameChain.read("entryFee");
+        if (!free2 && BigInt(f2) > 0n) {
+          fee = BigInt(f2);
+          const ok = await window.GameChain.ensureApproval(fee, (m) => showNotification(m, "info"));
+          if (!ok) { showNotification("Giriş ücreti onayı başarısız", "error"); return; }
+        }
+      } catch (e2) {
+        showNotification("Giriş kontrolü hatası: " + Wallet.shortErr(e2 || e), "error");
+        return;
+      }
+    }
 
     const res = await window.GameChain.write("joinGame", []);
     if (res.ok) {
