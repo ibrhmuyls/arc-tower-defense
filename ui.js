@@ -113,9 +113,10 @@ window.GameUI = (function () {
       // Features (bytes32[] ids, bool[] states) — ethers decode eder
       const feats = await readFeatures();
       window.GAME.features = feats;
-      const secondTower = !!feats["SecondTowerEnabled"];
-      const addBtn = $("add-tower-btn");
-      if (addBtn) addBtn.style.display = secondTower ? "" : "none";
+      // NOT: "+ Kule Ekle" butonu HER ZAMAN gosterilir (kule unlock zaten
+      // ownsItem ile kontrol ediliyor). SecondTowerEnabled flag'i sadece
+      // opsiyonel bir govde ozelligi; butonu gizlemeyelim ki kullanici
+      // en azindan archer kulesini ekleyebilsin.
 
       // ONCE: contract'tan joined durumunu ogren (sayfa yenilense de dogru kalir)
       // Boylece AlreadyJoined hatasi almazsın; zaten katildiysan oyun devam eder.

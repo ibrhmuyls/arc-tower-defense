@@ -104,6 +104,11 @@ window.GAME = (function () {
     // Upgrade modal
     document.getElementById("up-confirm").onclick = confirmUpgrade;
     document.getElementById("up-cancel").onclick = () => GameUI.closeModal("upgrade-modal");
+    // Game over / restart modal
+    const goRestart = document.getElementById("gameover-restart");
+    if (goRestart) goRestart.onclick = () => window.GAME.restartGame();
+    const goClose = document.getElementById("gameover-close");
+    if (goClose) goClose.onclick = () => GameUI.closeModal("gameover-modal");
     // Canvas click -> kule sec / yerlestir
     state.canvas.addEventListener("click", onCanvasClick);
   }
@@ -244,6 +249,34 @@ window.GAME = (function () {
     showNotification("Oyun başladı", "success");
   }
 
+  // ---------------- Game Over + Restart ----------------
+  function gameOver() {
+    showNotification("Oyun bitti!", "error");
+    // Restart modalini goster (index.html'de #gameover-modal var)
+    const score = state.wave;
+    const el = document.getElementById("gameover-wave");
+    if (el) el.textContent = "Ulaşılan dalga: " + state.wave;
+    const mb = document.getElementById("gameover-modal");
+    if (mb) mb.classList.add("open");
+  }
+
+  function restartGame() {
+    // State'i sifirla (cuzdan bagli kalir, sadece oyun iciv state)
+    state.towers = [];
+    state.enemies = [];
+    state.projectiles = [];
+    state.particles = [];
+    state.wave = 1;
+    state.selectedTower = null;
+    state.coins = state.startingCoins;
+    state.lives = state.maxLives;
+    state.gameTime = 0;
+    GameUI.closeModal("gameover-modal");
+    updateHUD();
+    start();
+    showNotification("Yeniden başlatıldı!", "success");
+  }
+
   function update(dt) {
     state.gameTime += dt;
     // Spawn
@@ -290,7 +323,10 @@ window.GAME = (function () {
     state.projectiles = state.projectiles.filter((p) => !p.dead);
     state.particles = state.particles.filter((p) => p.life > 0);
 
-    if (state.lives <= 0) { state.running = false; showNotification("Oyun bitti", "error"); }
+    if (state.lives <= 0 && state.running) {
+      state.running = false;
+      gameOver();
+    }
     updateHUD();
   }
 
@@ -484,7 +520,7 @@ window.GAME = (function () {
   function showNotification(msg, type) { GameUI.showNotification(msg, type); }
 
   return {
-    init, start, refreshHUD, resetForNewWallet,
+    init, start, refreshHUD, resetForNewWallet, restartGame,
     get joined() { return state.joined; },
     set joined(v) { state.joined = v; },
     get isRunning() { return state.running; },
