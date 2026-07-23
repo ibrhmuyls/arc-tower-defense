@@ -117,6 +117,15 @@ window.GameUI = (function () {
       const addBtn = $("add-tower-btn");
       if (addBtn) addBtn.style.display = secondTower ? "" : "none";
 
+      // ONCE: contract'tan joined durumunu ogren (sayfa yenilense de dogru kalir)
+      // Boylece AlreadyJoined hatasi almazsın; zaten katildiysan oyun devam eder.
+      try {
+        const joinedOnChain = await window.GameChain.read("hasJoined", WALLET_STATE.address);
+        window.GAME.joined = !!joinedOnChain;
+        const joinBtn = $("join-btn");
+        if (joinBtn) joinBtn.textContent = window.GAME.joined ? "Oyuna Devam Et" : (free ? "Oyuna Katıl (Ücretsiz)" : "Oyuna Katıl (" + feeNum.toFixed(2) + " USDC)");
+      } catch (_) { /* joined durumu okunamazsa default kalir */ }
+
       // Config: MaxLives, StartingCoins, EnemyMultiplier
       const [maxLives, startCoins, enemyMul, maintenance] = await Promise.all([
         getConfigUint("MaxLives"),
@@ -323,7 +332,15 @@ window.GameUI = (function () {
       showNotification("Oyuna katıldın!", "success");
       window.GAME.start();
     } else {
-      showNotification("Katılım başarısız: " + Wallet.shortErr(res.error), "error");
+      // AlreadyJoined ise: zaten katilmissin, oyunu baslat (hatayi yut)
+      const msg = (res.error && res.error.message) ? res.error.message : String(res.error);
+      if (/AlreadyJoined/i.test(msg)) {
+        window.GAME.joined = true;
+        showNotification("Zaten katılmışsın — oyun başlıyor", "success");
+        window.GAME.start();
+      } else {
+        showNotification("Katılım başarısız: " + Wallet.shortErr(res.error), "error");
+      }
     }
   }
 
