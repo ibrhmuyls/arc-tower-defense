@@ -126,13 +126,12 @@ window.GameUI = (function () {
         if (joinBtn) joinBtn.textContent = window.GAME.joined ? "Oyuna Devam Et" : (free ? "Oyuna Katıl (Ücretsiz)" : "Oyuna Katıl (" + feeNum.toFixed(2) + " USDC)");
       } catch (_) { /* joined durumu okunamazsa default kalir */ }
 
-      // Config: MaxLives, StartingCoins, EnemyMultiplier
-      const [maxLives, startCoins, enemyMul, maintenance] = await Promise.all([
-        getConfigUint("MaxLives"),
-        getConfigUint("StartingCoins"),
-        getConfigUint("EnemyMultiplier"),
-        window.GameChain.read("getBoolConfig", window.GameChain.idHash(window.ARC_CONFIG.CONFIG_NAMES.Maintenance)),
-      ]);
+      // Config: MaxLives, StartingCoins, EnemyMultiplier (seri - RPC throttle azaltir)
+      const maxLives = await getConfigUint("MaxLives");
+      const startCoins = await getConfigUint("StartingCoins");
+      const enemyMul = await getConfigUint("EnemyMultiplier");
+      let maintenance = false;
+      try { maintenance = await window.GameChain.read("getBoolConfig", window.GameChain.idHash(window.ARC_CONFIG.CONFIG_NAMES.Maintenance)); } catch (_) {}
       if (maxLives) window.GAME.maxLives = Number(maxLives);
       if (startCoins) { window.GAME.startingCoins = Number(startCoins); window.GAME.coins = Number(startCoins); }
       if (enemyMul) window.GAME.enemyMultiplier = Number(enemyMul) / 100;
@@ -154,7 +153,13 @@ window.GameUI = (function () {
 
   async function getConfigUint(name) {
     const id = window.GameChain.idHash(window.ARC_CONFIG.CONFIG_NAMES[name]);
-    return window.GameChain.read("getUintConfig", id);
+    try {
+      const v = await window.GameChain.read("getUintConfig", id);
+      return v;
+    } catch (e) {
+      // RPC gecikmesi / rate-limit -> 0 fallback (contract zaten 0 dondurur)
+      return 0n;
+    }
   }
 
   async function readFeatures() {
