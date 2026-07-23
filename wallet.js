@@ -139,6 +139,7 @@ window.WALLET_STATE = {
     WALLET_STATE.connected = false;
     WALLET_STATE.usdcBalance = 0;
     WALLET_STATE.chainOk = false;
+    if (window.GAME && window.GAME.resetForNewWallet) window.GAME.resetForNewWallet();
     GameUI.onWalletDisconnected();
   }
 

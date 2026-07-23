@@ -72,6 +72,22 @@ window.GAME = (function () {
     updateHUD();
   }
 
+  // Cuzdan degisince / yenile baglaninca oyun state'ini sifirla (yeni oyuncu = yeni oyun)
+  function resetForNewWallet() {
+    state.joined = false;
+    state.running = false;
+    state.towers = [];
+    state.enemies = [];
+    state.projectiles = [];
+    state.particles = [];
+    state.wave = 1;
+    state.selectedTower = null;
+    state.coins = state.startingCoins;
+    state.lives = state.maxLives;
+    state.ownedTowerItems = new Set();
+    updateHUD();
+  }
+
   function bindUI() {
     document.getElementById("join-btn").onclick = () => GameUI.joinGame();
     document.getElementById("add-tower-btn").onclick = () => openAddTowerModal();
@@ -468,9 +484,10 @@ window.GAME = (function () {
   function showNotification(msg, type) { GameUI.showNotification(msg, type); }
 
   return {
-    init, start, refreshHUD,
+    init, start, refreshHUD, resetForNewWallet,
     get joined() { return state.joined; },
     set joined(v) { state.joined = v; },
+    get isRunning() { return state.running; },
     get entryFeeUSDC() { return state.entryFeeUSDC; },
     set entryFeeUSDC(v) { state.entryFeeUSDC = v; },
     get maxLives() { return state.maxLives; },

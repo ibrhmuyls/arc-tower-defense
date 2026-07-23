@@ -88,12 +88,24 @@ window.GameChain = (function () {
 
   // ---- Generic WRITE (ethers Contract, cuzdan onayi + receipt bekler) ----
   // doner: { ok:true, hash, receipt } veya { ok:false, error }
+  // NOT: tx gönderildi ama receipt beklenemediyse (RPC yavas/timeout) yine de
+  // ok:true sayiyoruz — cunku islem on-chain'de. Caller zaten AlreadyJoined
+  // gibi durumlari ayrica kontrol eder.
   async function write(name, args, opts) {
     if (!writeContract) throw new Error("Chain yazma modu hazir degil (once cuzdan bagla).");
     opts = opts || {};
     try {
       const tx = await writeContract[name](...(args || []), opts.overrides || {});
-      const receipt = await tx.wait();
+      let receipt = null;
+      try {
+        receipt = await tx.wait(1, 120000); // 1 confirm, 120s timeout
+      } catch (waitErr) {
+        // receipt alinamadi ama tx gonderildi; tx.hash varsa basarili kabul et
+        if (tx && tx.hash) {
+          return { ok: true, hash: tx.hash, receipt: null, sentOnly: true };
+        }
+        throw waitErr;
+      }
       return { ok: true, hash: tx.hash, receipt };
     } catch (e) {
       return { ok: false, error: e };

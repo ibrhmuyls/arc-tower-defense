@@ -124,6 +124,11 @@ window.GameUI = (function () {
         window.GAME.joined = !!joinedOnChain;
         const joinBtn = $("join-btn");
         if (joinBtn) joinBtn.textContent = window.GAME.joined ? "Oyuna Devam Et" : (free ? "Oyuna Katıl (Ücretsiz)" : "Oyuna Katıl (" + feeNum.toFixed(2) + " USDC)");
+        // Zaten katildiysan otomatik baslat (butona basmayi bekleme)
+        if (window.GAME.joined && !window.GAME.isRunning) {
+          window.GAME.start();
+          showNotification("Hoş geldin! Oyun devam ediyor", "success");
+        }
       } catch (_) { /* joined durumu okunamazsa default kalir */ }
 
       // Config: MaxLives, StartingCoins, EnemyMultiplier (seri - RPC throttle azaltir)
