@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arc Tower Defense — Game Platform</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">🏰 Arc Tower Defense</div>
+    <div class="top-controls">
+      <span id="entry-fee-label" class="pill">Giriş: —</span>
+      <span class="pill">USDC: <b id="usdc-bal">0.00</b></span>
+      <span class="pill addr" id="wallet-addr">—</span>
+      <button id="connect-btn" class="btn">Cüzdan Bağla</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="game-wrap">
+      <canvas id="game" width="960" height="540"></canvas>
+      <div class="game-toolbar">
+        <button id="join-btn" class="btn primary">Oyuna Katıl</button>
+        <button id="add-tower-btn" class="btn">➕ Kule Ekle</button>
+        <button id="upgrade-btn" class="btn" disabled>⬆️ Yükselt</button>
+        <button id="speed-btn" class="btn">Hız: 1x</button>
+        <button id="scenario-btn" class="btn">🌗 Senaryo</button>
+      </div>
+      <div class="hud">
+        <span>Can: <b id="hud-lives">20 / 20</b></span>
+        <span>Coin: <b id="hud-coins">150</b></span>
+        <span>Dalga: <b id="hud-wave">1</b></span>
+        <span>Senaryo: <b id="hud-scenario">Bahar - Gündüz</b></span>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <h3>Mağaza (contract'tan)</h3>
+      <p class="muted">Tüm fiyatlar / itemlar zincirdeki <code>GamePlatform</code> sözleşmesinden okunur.</p>
+      <div id="shop-grid" class="shop-grid"></div>
+    </aside>
+  </main>
+
+  <!-- Wallet picker -->
+  <div id="wallet-modal" class="modal">
+    <div class="modal-box">
+      <h3>Cüzdan Seç</h3>
+      <div id="wallet-list" class="wallet-list"></div>
+      <button class="btn ghost" onclick="GameUI.closeModal('wallet-modal')">İptal</button>
+    </div>
+  </div>
+
+  <!-- Add tower -->
+  <div id="add-modal" class="modal">
+    <div class="modal-box">
+      <h3>Kule Ekle</h3>
+      <p class="muted">Önce türü seç, sonra haritada boş yere tıkla.</p>
+      <div id="add-tower-grid" class="tower-grid"></div>
+      <div class="modal-actions">
+        <button id="add-cancel" class="btn ghost">İptal</button>
+        <button id="add-confirm" class="btn">Tamam</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upgrade -->
+  <div id="upgrade-modal" class="modal">
+    <div class="modal-box">
+      <h3 id="up-title">Yükselt</h3>
+      <div id="up-body"></div>
+      <div class="modal-actions">
+        <button id="up-cancel" class="btn ghost">İptal</button>
+        <button id="up-confirm" class="btn primary">Yükselt</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="vendor/ethers.umd.min.js"></script>
+  <script src="abi.js"></script>
+  <script src="config.js"></script>
+  <script src="wallet.js"></script>
+  <script src="chain.js"></script>
+  <script src="ui.js"></script>
+  <script src="game.js"></script>
+  <script>
+    // Global hata yakalayici: sessiz JS hatalarini toast ile goster (debug icin).
+    window.addEventListener("error", function (e) {
+      var t = document.getElementById("toast");
+      if (t) { t.textContent = "JS HATASI: " + (e.message || e.error || "bilinmiyor"); t.className = "toast toast-error show"; }
+    });
+    window.addEventListener("unhandledrejection", function (e) {
+      var t = document.getElementById("toast");
+      if (t) { t.textContent = "BEKLENMEYEN: " + (e.reason && e.reason.message ? e.reason.message : e.reason); t.className = "toast toast-error show"; }
+    });
+    // Contract adresi deploy edilmemisse kullaniciya acik hata goster.
+    (function () {
+      if (window.GameConfigReady && !window.GameConfigReady.ok) {
+        window.addEventListener("DOMContentLoaded", function () {
+          const t = document.getElementById("toast");
+          if (t) { t.textContent = window.GameConfigReady.describe(); t.className = "toast toast-warn show"; }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

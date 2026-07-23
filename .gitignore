@@ -1,0 +1,10 @@
+# Derleme artifact'lari (gerekmez, yeniden uretilebilir)
+build/
+
+# OS / editor
+.DS_Store
+*.swp
+.vscode/
+
+# Node (kullanilmiyor ama emniyet)
+node_modules/

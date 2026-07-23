@@ -1,0 +1,102 @@
+:root {
+  --bg: #0f1220;
+  --panel: #1a1f35;
+  --panel2: #232a44;
+  --accent: #7c5cff;
+  --accent2: #4fc3f7;
+  --text: #e8ecff;
+  --muted: #8a93b8;
+  --ok: #4caf50;
+  --warn: #ffb300;
+  --err: #ef5350;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; font-family: "Segoe UI", system-ui, sans-serif;
+  background: var(--bg); color: var(--text);
+}
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px; background: var(--panel); border-bottom: 1px solid #2a3050;
+}
+.brand { font-weight: 700; font-size: 18px; }
+.top-controls { display: flex; gap: 10px; align-items: center; }
+.pill {
+  background: var(--panel2); padding: 6px 10px; border-radius: 20px;
+  font-size: 13px; color: var(--muted);
+}
+.pill.addr { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn {
+  background: var(--panel2); color: var(--text); border: 1px solid #333a5c;
+  padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px;
+}
+.btn:hover { border-color: var(--accent); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.primary { background: var(--accent); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.connected { background: var(--ok); border-color: var(--ok); }
+
+.layout { display: flex; gap: 16px; padding: 16px; align-items: flex-start; }
+.game-wrap { flex: 1; min-width: 0; }
+#game {
+  width: 100%; max-width: 960px; aspect-ratio: 16/9; background: #000;
+  border-radius: 12px; display: block; border: 1px solid #2a3050;
+}
+.game-toolbar { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.hud {
+  display: flex; gap: 18px; margin-top: 10px; font-size: 14px; color: var(--muted);
+}
+.hud b { color: var(--text); }
+
+.sidebar {
+  width: 320px; flex-shrink: 0; background: var(--panel);
+  border-radius: 12px; padding: 14px; border: 1px solid #2a3050;
+}
+.sidebar h3 { margin: 0 0 6px; }
+.muted { color: var(--muted); font-size: 12px; }
+.shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.shop-card {
+  background: var(--panel2); border-radius: 10px; padding: 10px; text-align: center;
+  border: 1px solid #2f375c;
+}
+.shop-icon { font-size: 26px; }
+.shop-title { font-weight: 600; font-size: 13px; margin: 4px 0; }
+.shop-cat { font-size: 11px; color: var(--muted); }
+.shop-price { font-size: 12px; color: var(--accent2); margin: 4px 0; }
+.buy-btn { width: 100%; margin-top: 6px; background: var(--accent); border: none; }
+
+.modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none;
+  align-items: center; justify-content: center; z-index: 50;
+}
+.modal.open { display: flex; }
+.modal-box {
+  background: var(--panel); padding: 20px; border-radius: 14px; width: 420px;
+  max-width: 92vw; border: 1px solid #2a3050;
+}
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.wallet-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.wallet-option {
+  background: var(--panel2); border: 1px solid #333a5c; color: var(--text);
+  padding: 12px; border-radius: 8px; cursor: pointer; text-align: left; font-size: 15px;
+}
+.wallet-option:hover { border-color: var(--accent); }
+.tower-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.tower-card {
+  background: var(--panel2); border: 1px solid #333a5c; border-radius: 10px;
+  padding: 12px; text-align: center; cursor: pointer;
+}
+.tower-card.locked { opacity: .55; cursor: not-allowed; }
+.tower-icon { width: 36px; height: 36px; border-radius: 50%; margin: 0 auto 6px; }
+
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--panel2); color: var(--text); padding: 12px 18px; border-radius: 10px;
+  border: 1px solid #333a5c; opacity: 0; pointer-events: none; transition: opacity .3s;
+  z-index: 100; max-width: 80vw;
+}
+.toast.show { opacity: 1; }
+.toast-success { border-color: var(--ok); }
+.toast-error { border-color: var(--err); }
+.toast-warn { border-color: var(--warn); }
+.toast-info { border-color: var(--accent2); }
