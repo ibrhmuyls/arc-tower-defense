@@ -71,6 +71,7 @@ window.GameUI = (function () {
   function onWalletConnected() {
     const btn = $("connect-btn");
     if (btn) { btn.textContent = shortAddr(WALLET_STATE.address); btn.classList.add("connected"); }
+    revealApp();
     refreshWalletUI();
     syncFromContract();
   }
@@ -79,6 +80,17 @@ window.GameUI = (function () {
     if (btn) { btn.textContent = "Cüzdan Bağla"; btn.classList.remove("connected"); }
     $("wallet-addr").textContent = "—";
     $("usdc-bal").textContent = "0.00";
+    hideApp();
+  }
+  function revealApp() {
+    const l = $("landing"); if (l) l.classList.add("gone");
+    const h = $("app-header"); if (h) h.style.display = "";
+    const m = $("app-main"); if (m) m.style.display = "";
+  }
+  function hideApp() {
+    const l = $("landing"); if (l) l.classList.remove("gone");
+    const h = $("app-header"); if (h) h.style.display = "none";
+    const m = $("app-main"); if (m) m.style.display = "none";
   }
   function onBalanceUpdated() {
     $("usdc-bal").textContent = (WALLET_STATE.usdcBalance || 0).toFixed(2);
@@ -118,11 +130,18 @@ window.GameUI = (function () {
       // opsiyonel bir govde ozelligi; butonu gizlemeyelim ki kullanici
       // en azindan archer kulesini ekleyebilsin.
 
-      // ONCE: contract'tan joined durumunu ogren (sayfa yenilense de dogru kalir)
-      // Boylece AlreadyJoined hatasi almazsın; zaten katildiysan oyun devam eder.
+      // ONCE: contract'tan joined durumunu ogren (retry'li — RPC titrerse tekrar dene)
       try {
-        const joinedOnChain = await window.GameChain.read("hasJoined", WALLET_STATE.address);
-        window.GAME.joined = !!joinedOnChain;
+        let joinedOnChain = false;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            joinedOnChain = !!(await window.GameChain.read("hasJoined", WALLET_STATE.address));
+            break;
+          } catch (e) {
+            await new Promise((r) => setTimeout(r, 500));
+          }
+        }
+        window.GAME.joined = joinedOnChain;
         const joinBtn = $("join-btn");
         if (joinBtn) joinBtn.textContent = window.GAME.joined ? "Oyuna Devam Et" : (free ? "Oyuna Katıl (Ücretsiz)" : "Oyuna Katıl (" + feeNum.toFixed(2) + " USDC)");
         // Zaten katildiysan otomatik baslat (butona basmayi bekleme)
@@ -304,54 +323,58 @@ window.GameUI = (function () {
   }
 
   // ---------------- Join ----------------
+  let joining = false;
   async function joinGame() {
+    if (joining) return;                       // cift tiklamayi engelle
     if (!WALLET_STATE.connected) { showNotification("Önce cüzdan bağla", "warn"); return; }
     if (!window.GameChain.isReady()) { showNotification(window.GameConfigReady.describe(), "warn"); return; }
     if (!(await window.Wallet.ensureChain())) return;
 
-    // Entry fee kontrolu (seri cagri — paralel RPC rate-limit'i azaltir)
-    let fee = 0n;
+    joining = true;
+    setButtonsDisabled(true);
     try {
-      const [f, free] = await Promise.all([
-        window.GameChain.read("entryFee"),
-        window.GameChain.read("isGameFree"),
-      ]);
-      if (!free && BigInt(f) > 0n) {
-        fee = BigInt(f);
+      // Entry fee kontrolu (retry'li)
+      let fee = 0n;
+      let free = false;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const [f, fr] = await Promise.all([
+            window.GameChain.read("entryFee"),
+            window.GameChain.read("isGameFree"),
+          ]);
+          fee = BigInt(f || 0); free = !!fr;
+          break;
+        } catch (e) {
+          if (attempt === 2) throw e;
+          await new Promise((r) => setTimeout(r, 500));
+        }
+      }
+      if (!free && fee > 0n) {
         const ok = await window.GameChain.ensureApproval(fee, (m) => showNotification(m, "info"));
         if (!ok) { showNotification("Giriş ücreti onayı başarısız", "error"); return; }
       }
-    } catch (e) {
-      // Tekrar dene: bazen ilk isGameFree cagrisi RPC gecikmesinden ogebilir
-      try {
-        const free2 = await window.GameChain.read("isGameFree");
-        const f2 = await window.GameChain.read("entryFee");
-        if (!free2 && BigInt(f2) > 0n) {
-          fee = BigInt(f2);
-          const ok = await window.GameChain.ensureApproval(fee, (m) => showNotification(m, "info"));
-          if (!ok) { showNotification("Giriş ücreti onayı başarısız", "error"); return; }
-        }
-      } catch (e2) {
-        showNotification("Giriş kontrolü hatası: " + Wallet.shortErr(e2 || e), "error");
-        return;
-      }
-    }
 
-    const res = await window.GameChain.write("joinGame", []);
-    if (res.ok) {
-      window.GAME.joined = true;
-      showNotification("Oyuna katıldın!", "success");
-      window.GAME.start();
-    } else {
-      // AlreadyJoined ise: zaten katilmissin, oyunu baslat (hatayi yut)
-      const msg = (res.error && res.error.message) ? res.error.message : String(res.error);
-      if (/AlreadyJoined/i.test(msg)) {
+      const res = await window.GameChain.write("joinGame", []);
+      if (res.ok) {
         window.GAME.joined = true;
-        showNotification("Zaten katılmışsın — oyun başlıyor", "success");
+        showNotification("Oyuna katıldın!", "success");
         window.GAME.start();
       } else {
-        showNotification("Katılım başarısız: " + Wallet.shortErr(res.error), "error");
+        const msg = (res.error && res.error.message) ? res.error.message : String(res.error);
+        if (/AlreadyJoined/i.test(msg)) {
+          window.GAME.joined = true;
+          showNotification("Zaten katılmışsın — oyun başlıyor", "success");
+          window.GAME.start();
+        } else if (/MissingRevertData|missing revert data|revert/i.test(msg)) {
+          // RPC titremesi: hasJoined tekrar kontrol et, oyun zaten basladiysa sorun yok
+          showNotification("Ağ yoğun — birkaç sn sonra tekrar dene", "warn");
+        } else {
+          showNotification("Katılım başarısız: " + Wallet.shortErr(res.error), "error");
+        }
       }
+    } finally {
+      joining = false;
+      setButtonsDisabled(false);
     }
   }
 
