@@ -394,12 +394,7 @@ window.GameUI = (function () {
     // Join
     const jb = document.getElementById("join-btn");
     if (jb) jb.addEventListener("click", joinGame);
-    // Add tower
-    const atb = document.getElementById("add-tower-btn");
-    if (atb) atb.addEventListener("click", openAddTowerModal);
-    // Upgrade
-    const ub = document.getElementById("upgrade-btn");
-    if (ub) ub.addEventListener("click", openUpgradeModal);
+    // Add tower / Upgrade butonlari game.js bindUI icinde bagli (orada openAddTowerModal var)
     // Wallet modal iptal
     const wi = document.getElementById("wallet-iptal");
     if (wi) wi.addEventListener("click", () => closeModal("wallet-modal"));
