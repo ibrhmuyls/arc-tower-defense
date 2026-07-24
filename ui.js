@@ -380,7 +380,33 @@ window.GameUI = (function () {
 
   function updateHUD() { if (window.GAME && window.GAME.refreshHUD) window.GAME.refreshHUD(); }
 
+  // ---------------- Init (tum butonlari addEventListener ile bagla) ----------------
+  function init() {
+    // Landing
+    const lb = document.getElementById("landing-connect");
+    if (lb) lb.addEventListener("click", showWalletPicker);
+    // Header connect
+    const cb = document.getElementById("connect-btn");
+    if (cb) cb.addEventListener("click", () => {
+      if (WALLET_STATE.connected) window.Wallet.disconnect();
+      else showWalletPicker();
+    });
+    // Join
+    const jb = document.getElementById("join-btn");
+    if (jb) jb.addEventListener("click", joinGame);
+    // Add tower
+    const atb = document.getElementById("add-tower-btn");
+    if (atb) atb.addEventListener("click", openAddTowerModal);
+    // Upgrade
+    const ub = document.getElementById("upgrade-btn");
+    if (ub) ub.addEventListener("click", openUpgradeModal);
+    // Wallet modal iptal
+    const wi = document.getElementById("wallet-iptal");
+    if (wi) wi.addEventListener("click", () => closeModal("wallet-modal"));
+  }
+
   return {
+    init,
     showNotification, openModal, closeModal, setButtonsDisabled,
     onWalletConnected, onWalletDisconnected, onBalanceUpdated, refreshWalletUI,
     showWalletPicker, syncFromContract, renderShop, buyItem, joinGame, updateHUD,

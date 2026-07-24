@@ -47,7 +47,7 @@
     <div class="modal-box">
       <h3>Cüzdan Seç</h3>
       <div id="wallet-list" class="wallet-list"></div>
-      <button class="btn ghost" onclick="GameUI.closeModal('wallet-modal')">İptal</button>
+      <button id="wallet-iptal" class="btn ghost">İptal</button>
     </div>
   </div>
 
@@ -94,7 +94,7 @@
       <div class="landing-logo">🏰</div>
       <h1>Arc Tower Defense</h1>
       <p class="sub">Arc Testnet üzerinde çalışan Web3 kule savunma oyunu.<br>Başlamak için cüzdanını bağla.</p>
-      <button id="landing-connect" class="btn primary big" onclick="GameUI.showWalletPicker()">🔗 Cüzdan Bağla</button>
+      <button id="landing-connect" class="btn primary big">🔗 Cüzdan Bağla</button>
       <p class="landing-note muted">MetaMask / Rabby gerekli · Arc Testnet ağı</p>
     </div>
   </div>
@@ -108,6 +108,15 @@
   <script src="chain.js"></script>
   <script src="ui.js"></script>
   <script src="game.js"></script>
+  <script>
+    // Init: tum butonlari bagla (DOM hazir olunca)
+    function boot() {
+      try { if (window.GameUI && window.GameUI.init) window.GameUI.init(); } catch (e) { console.error("GameUI.init", e); }
+      try { if (window.GAME && window.GAME.init) window.GAME.init(); } catch (e) { console.error("GAME.init", e); }
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+    else boot();
+  </script>
   <script>
     // Global hata yakalayici: sessiz JS hatalarini toast ile goster (debug icin).
     window.addEventListener("error", function (e) {
