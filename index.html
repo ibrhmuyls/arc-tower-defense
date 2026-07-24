@@ -7,17 +7,17 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="topbar" id="app-header" style="display:none">
+  <header class="topbar" id="app-header">
     <div class="brand">🏰 Arc Tower Defense</div>
     <div class="top-controls">
       <span id="entry-fee-label" class="pill">Giriş: —</span>
       <span class="pill">USDC: <b id="usdc-bal">0.00</b></span>
       <span class="pill addr" id="wallet-addr">—</span>
-      <button id="connect-btn" class="btn">Cüzdan Bağla</button>
+      <button id="connect-btn" class="btn" onclick="GameUI.showWalletPicker()">Cüzdan Bağla</button>
     </div>
   </header>
 
-  <main class="layout" id="app-main" style="display:none">
+  <main class="layout" id="app-main">
     <section class="game-wrap">
       <canvas id="game" width="960" height="540"></canvas>
       <div class="game-toolbar">
@@ -47,7 +47,7 @@
     <div class="modal-box">
       <h3>Cüzdan Seç</h3>
       <div id="wallet-list" class="wallet-list"></div>
-      <button id="wallet-iptal" class="btn ghost">İptal</button>
+      <button class="btn ghost" onclick="GameUI.closeModal('wallet-modal')">İptal</button>
     </div>
   </div>
 
@@ -85,17 +85,6 @@
         <button id="gameover-close" class="btn ghost">Kapat</button>
         <button id="gameover-restart" class="btn primary">🔄 Yeniden Başlat</button>
       </div>
-    </div>
-  </div>
-
-  <!-- Landing (ön sayfa: önce cüzdan bağla) -->
-  <div id="landing" class="landing">
-    <div class="landing-card">
-      <div class="landing-logo">🏰</div>
-      <h1>Arc Tower Defense</h1>
-      <p class="sub">Arc Testnet üzerinde çalışan Web3 kule savunma oyunu.<br>Başlamak için cüzdanını bağla.</p>
-      <button id="landing-connect" class="btn primary big">🔗 Cüzdan Bağla</button>
-      <p class="landing-note muted">MetaMask / Rabby gerekli · Arc Testnet ağı</p>
     </div>
   </div>
 

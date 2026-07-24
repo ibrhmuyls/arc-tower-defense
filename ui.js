@@ -71,7 +71,6 @@ window.GameUI = (function () {
   function onWalletConnected() {
     const btn = $("connect-btn");
     if (btn) { btn.textContent = shortAddr(WALLET_STATE.address); btn.classList.add("connected"); }
-    revealApp();
     refreshWalletUI();
     syncFromContract();
   }
@@ -80,17 +79,6 @@ window.GameUI = (function () {
     if (btn) { btn.textContent = "Cüzdan Bağla"; btn.classList.remove("connected"); }
     $("wallet-addr").textContent = "—";
     $("usdc-bal").textContent = "0.00";
-    hideApp();
-  }
-  function revealApp() {
-    const l = $("landing"); if (l) l.classList.add("gone");
-    const h = $("app-header"); if (h) h.style.display = "";
-    const m = $("app-main"); if (m) m.style.display = "";
-  }
-  function hideApp() {
-    const l = $("landing"); if (l) l.classList.remove("gone");
-    const h = $("app-header"); if (h) h.style.display = "none";
-    const m = $("app-main"); if (m) m.style.display = "none";
   }
   function onBalanceUpdated() {
     $("usdc-bal").textContent = (WALLET_STATE.usdcBalance || 0).toFixed(2);
@@ -380,21 +368,12 @@ window.GameUI = (function () {
 
   function updateHUD() { if (window.GAME && window.GAME.refreshHUD) window.GAME.refreshHUD(); }
 
-  // ---------------- Init (tum butonlari addEventListener ile bagla) ----------------
+  // ---------------- Init (buton baglama) ----------------
   function init() {
-    // Landing
-    const lb = document.getElementById("landing-connect");
-    if (lb) lb.addEventListener("click", showWalletPicker);
-    // Header connect
-    const cb = document.getElementById("connect-btn");
-    if (cb) cb.addEventListener("click", () => {
-      if (WALLET_STATE.connected) window.Wallet.disconnect();
-      else showWalletPicker();
-    });
-    // Join
+    // Connect butonu index.html'de inline onclick ile bagli (GameUI.showWalletPicker)
+    // Join butonu
     const jb = document.getElementById("join-btn");
     if (jb) jb.addEventListener("click", joinGame);
-    // Add tower / Upgrade butonlari game.js bindUI icinde bagli (orada openAddTowerModal var)
     // Wallet modal iptal
     const wi = document.getElementById("wallet-iptal");
     if (wi) wi.addEventListener("click", () => closeModal("wallet-modal"));
